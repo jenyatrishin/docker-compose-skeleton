@@ -1,0 +1,60 @@
+version: '3.3'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: project_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/certs/:/etc/nginx/certs
+      - ./www:/var/www:delegated
+      - ~/.composer/docker-cache/:/root/.composer:cached
+    links:
+      - php
+
+  mysql:
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    container_name: project_mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=jenya
+      - MYSQL_DATABASE=projectdatabase
+      - MYSQL_USER=jenya
+      - MYSQL_PASSWORD=jenya
+    volumes:
+      - ./mysql:/var/lib/mysql:delegated
+      - ./mysqldumps:/var/lib/mysqldumps:delegated
+
+
+  php:
+    build: ./php
+    container_name: project_php
+    volumes:
+      - ./www:/var/www:delegated
+    links:
+      - mysql
+      - elasticsearch
+      - redis
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    links:
+      - php
+
+  elasticsearch:
+    image: elasticsearch:latest
+    ports:
+      - "9200:9200"
+    container_name: project_elasticsearch
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379
